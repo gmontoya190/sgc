@@ -56,6 +56,8 @@ public class NotificationServlet extends HttpServlet {
 					out.println("<thead>");
 					out.println("<tr>");
 					out.println("<th>Nombre Formato</th>");
+					out.println("<th>Id Formato</th>");
+					out.println("<th>Id Proceso</th>");
 					out.println("<th>Versi&oacute;n</th>");
 					out.println("<th>Extension</th>");
 					out.println("<th>Acciones</th>");
@@ -67,6 +69,12 @@ public class NotificationServlet extends HttpServlet {
 						out.println("<tr>");
 						out.println("<td>");
 						out.println(format.getNameFormat());
+						out.println("</td>");
+						out.println("<td>");
+						out.println(format.getIdFormat());
+						out.println("</td>");
+						out.println("<td>");
+						out.println(format.getProcessId());
 						out.println("</td>");
 						out.println("<td>");
 						out.println(format.getVersion());

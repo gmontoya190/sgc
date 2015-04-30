@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import data.model.Format;
+import data.model.Objective;
+import data.model.Strategy;
 import data.model.User;
 
 public class ConexionDB {
@@ -32,6 +34,16 @@ public class ConexionDB {
 		}
 
 		return conexion;
+	}
+	public void closeConnection (){
+		try {
+		conexion.close();
+		} catch (SQLException se) {
+			se.printStackTrace();
+		} catch (Exception e) {
+			// Handle errors for Class.forName
+			e.printStackTrace();
+		}
 	}
 
 	public User getIfUserExists(String email, String password) {
@@ -77,9 +89,15 @@ public class ConexionDB {
 
 	}
 
-	public List<Format> getFormatsByProcess(String idProcess) {
-		String query = "select * from formatos where proceso_id='" + idProcess + "' and "
-				+ "aprobado='Y' and activo='Y';";
+	public List<Format> getFormatsByProcessOrNo(String idProcess ,String leadProcess) {
+		String query=null;
+		if("Y".equals(leadProcess)) {
+			query = "select * from formatos where proceso_id='" + idProcess + "' and "
+					+ "aprobado='Y' and activo='Y';";
+		} else {
+			query = "select * from formatos where aprobado='Y' and activo='Y';";
+		}
+		
 		List<Format> listFormats = null;
 		ResultSet rs = null;
 
@@ -91,12 +109,14 @@ public class ConexionDB {
 				Format format = null;
 				while (rs.next()) {
 					String idFormat = rs.getString("id_formato");
+					String idPro = rs.getString("proceso_id");
 					String version = rs.getString("version");
 					String nameFormat = rs.getString("nombre_formato");
 					String extension = rs.getString("extension");
 					String userModi= rs.getString("usuario_ultima_mod");
 					format = new Format();
 					format.setExtension(extension);
+					format.setProcessId(idPro);
 					format.setIdFormat(idFormat);
 					format.setNameFormat(nameFormat);
 					format.setVersion(version);
@@ -126,7 +146,93 @@ public class ConexionDB {
 
 		return listFormats;
 	}
+	public List<Objective> getObjectives() {
+		List<Objective> listObjectives=null;
+		String query = "select * from objetivo";
+		
+		ResultSet rs = null;
 
+		try {
+			stmt = conexion.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs != null) {
+				listObjectives = new ArrayList<Objective>();
+				Objective ob = null;
+				while (rs.next()) {
+					String idObjective = rs.getString("id_objetivo");
+					String description = rs.getString("descripcion");
+					ob = new Objective();
+					ob.setIdObjective(idObjective);
+					ob.setDescription(description);
+					listObjectives.add(ob);
+				}
+			} else {
+				System.out.println("No existen objetivos");
+			}
+
+		} catch (SQLException se) {
+			se.printStackTrace();
+		} catch (Exception e) {
+			// Handle errors for Class.forName
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				stmt.close();
+				//conexion.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("No se pudo cerrar la conexion");
+			}
+
+		}
+		
+		return listObjectives;
+		
+		
+	}
+	public List<Strategy> getStrategiesByObjective(String objective) {
+		List<Strategy> listStrategies=null;
+		String query = "select * from estrategia where id_objetivo='"+objective+"';";
+		ResultSet rs = null;
+
+		try {
+			stmt = conexion.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs != null) {
+				listStrategies = new ArrayList<Strategy>();
+				Strategy stra = null;
+				while (rs.next()) {
+					String idStrategy = rs.getString("id_estrategia");
+					String description = rs.getString("descripcion");
+					stra = new Strategy();
+					stra.setIdStrategy(idStrategy);
+					stra.setIdObjective(objective);
+					stra.setDescription(description);
+					listStrategies.add(stra);
+				}
+			} else {
+				System.out.println("No existen estrategias para este objetivo");
+			}
+
+		} catch (SQLException se) {
+			se.printStackTrace();
+		} catch (Exception e) {
+			// Handle errors for Class.forName
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				stmt.close();
+				//conexion.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("No se pudo cerrar la conexion");
+			}
+
+		}
+		return listStrategies;
+	}
 	public void createPendingFormat(Format format, String userLastModi, String processId, String aproved) {
 		String query = "insert into formatos values ('" + format.getIdFormat() + "','" + format.getVersion() + "'," + " '"
 				+ userLastModi + "', '" + format.getExtension() + "' , '" + aproved + "','" + "Y'" + ",'"
@@ -251,12 +357,14 @@ public class ConexionDB {
 			Format format = null;
 			while (rs.next()) {
 				String idFormat = rs.getString("id_formato");
+				String idProcess = rs.getString("proceso_id");
 				String version = rs.getString("version");
 				String nameFormat = rs.getString("nombre_formato");
 				String extension = rs.getString("extension");
 				String  userModi= rs.getString("extension");
 				format = new Format();
 				format.setExtension(extension);
+				format.setProcessId(idProcess);
 				format.setIdFormat(idFormat);
 				format.setNameFormat(nameFormat);
 				format.setVersion(version);

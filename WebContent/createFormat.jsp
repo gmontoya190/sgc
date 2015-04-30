@@ -11,6 +11,7 @@
 <script src="https://rawgithub.com/hayageek/jquery-upload-file/master/js/jquery.uploadfile.min.js"></script>
 <script src="js/loadFormats.js"></script>
 <script src="js/notification.js"></script>
+<script src="js/loadTasks.js"></script>
 
 </head>
 <body>
@@ -53,7 +54,7 @@
               <li><a href="#"><h4>Cuenta</h4></a></li>
             </ul>
         </div>
-        <div class="col-sm-9 col-md-10 main">
+        <div class="col-sm-9 col-md-10 main" id="content">
       <div class="container">
        <form class="form-horizontal" role="form" action="FortmatsServlet" method="post">
        <div class="form-group">
@@ -100,5 +101,4 @@
 </div>
 </div>
 </body>
-</html>
-       
+</html>       

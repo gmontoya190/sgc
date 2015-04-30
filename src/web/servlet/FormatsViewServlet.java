@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,8 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import operations.Notification;
 import data.model.Format;
-import data.model.User;
 import persistence.ConexionDB;
 
 /**
@@ -46,6 +45,7 @@ public class FormatsViewServlet extends HttpServlet {
 
 		HttpSession session = request.getSession(false);
 		String idProcess=(String)session.getAttribute("process");
+		String leadProcess=(String)session.getAttribute("leadProcess");
 		response.setContentType("text/html; charset=utf-8");		
 		String action=request.getParameter("action");
 		String actionFormatExistent=request.getParameter("id_format");
@@ -55,13 +55,20 @@ public class FormatsViewServlet extends HttpServlet {
 			PrintWriter out= response.getWriter();
 			if(conexionDB.connect()!=null) {
 				System.out.println("process id "+idProcess);
-				List<Format> listFormat= conexionDB.getFormatsByProcess(idProcess);
+				List<Format> listFormat= null;
+				if ("Y".equals(leadProcess)) {
+					listFormat=conexionDB.getFormatsByProcessOrNo(idProcess, "Y");
+				} else {
+					listFormat=conexionDB.getFormatsByProcessOrNo(idProcess, "N");
+				}
 				if(listFormat!=null){
 					out.println("<div class='table-responsive'>");
 					out.println("<table class='table table-striped'>");
 					out.println("<thead>");
 					out.println("<tr>");
 					out.println("<th>Nombre Formato</th>");
+					out.println("<th>Id Formato</th>");
+					out.println("<th>Id Proceso</th>");
 					out.println("<th>Versi&oacute;n</th>");
 					out.println("<th>Extension</th>");
 					out.println("<th>Acciones</th>");
@@ -73,6 +80,12 @@ public class FormatsViewServlet extends HttpServlet {
 						out.println("<tr>");
 						out.println("<td>");
 						out.println(format.getNameFormat());
+						out.println("</td>");
+						out.println("<td>");
+						out.println(format.getIdFormat());
+						out.println("</td>");
+						out.println("<td>");
+						out.println(format.getProcessId());
 						out.println("</td>");
 						out.println("<td>");
 						out.println(format.getVersion());
@@ -88,6 +101,11 @@ public class FormatsViewServlet extends HttpServlet {
 						out.println("<button name='id_format' id='id_format' value='modify_"+format.getIdFormat()+"_"+format.getVersion()+"' "
 								+ "type='submit' class='btn btn-primary'>"
 								+ "<span class='glyphicon glyphicon-pencil'></span></button>");
+						if("N".equals(leadProcess)) {
+							out.println("<button name='id_format' value='reject_"+format.getIdFormat()+"_"+format.getVersion()+"' "
+									+ "type='submit' class='btn btn-primary'>"
+									+ "<span class='glyphicon glyphicon-remove'></span></button>");
+						}						
 						out.println("<button name='id_format' id='id_format' value='download_"+format.getIdFormat()+"_"+format.getVersion()+"'"
 								+ " type='submit' class='btn btn-primary'>"
 								+ "<span class='glyphicon glyphicon-download-alt'></span></button>");
@@ -123,29 +141,50 @@ public class FormatsViewServlet extends HttpServlet {
 				session.setAttribute("format",format );
 				//session.setAttribute("action",split[0] );
 				if("modify".equals(split[0])) {
-					request.getServletContext().getRequestDispatcher("/uploadFile.jsp").forward(request, response);
-				} else {
+					session.setAttribute("action","modify" );
+					request.getServletContext().getRequestDispatcher("/modifyFormat.jsp").forward(request, response);
+					//request.getServletContext().getRequestDispatcher("/uploadFile.jsp").forward(request, response);
+				} else if ("download".equals(split[0])){
 					request.getServletContext().getRequestDispatcher("/ActionFormat").forward(request, response);
+				} else {
+						if(conexionDB.connect()!=null) {
+						conexionDB.updateActiveFormat(split[1], split[2], "N");
+						Notification noti= new Notification();
+						String text="Formato con id= "+split[1]+" y version= "+split[2]+"no ha sido eliminado";
+						noti.sendEmail(format.getUserLastModification(), text);
+						response.sendRedirect("WelPageLead.jsp");
+						}
 				}
 				
 			
 			}
 			
 		} else if (loadCreateFormat!=null) {
+			session.setAttribute("action","create" );
 			request.getServletContext().getRequestDispatcher("/createFormat.jsp").forward(request, response);
 		} else if(nombreFormat!=null) {
-			String nameFormat=request.getParameter("nombreFormato");
-			String id=request.getParameter("idProceso");
-			String  version=request.getParameter("version");
-			String  idFormat=request.getParameter("idFormato");	
-			Format newFormat= new Format();
-			newFormat.setNameFormat(nameFormat);
-			newFormat.setProcessId(id);
-			newFormat.setVersion(version);
-			newFormat.setIdFormat(idFormat);
-			session.setAttribute("format",newFormat);
-			session.setAttribute("newFormat","Y");
-			session.setAttribute("action","modify" );
+			String actionFormat = (String) session.getAttribute("action");
+			if("create".equals(actionFormat)) {
+				String nameFormat=request.getParameter("nombreFormato");
+				String id=request.getParameter("idProceso");
+				String  version=request.getParameter("version");
+				String  idFormat=request.getParameter("idFormato");
+				Format newFormat= new Format();
+				newFormat.setNameFormat(nameFormat);
+				newFormat.setProcessId(id);
+				newFormat.setVersion(version);
+				newFormat.setIdFormat(idFormat);
+				session.setAttribute("format",newFormat);
+				session.setAttribute("newFormat","Y");
+				session.setAttribute("action","modify" );
+			} else {
+				Format format=(Format)session.getAttribute("format");
+				String nameFormat=request.getParameter("nombreFormato");
+				String  version=request.getParameter("version");
+				format.setNameFormat(nameFormat);
+				format.setVersion(version);
+				session.setAttribute("format",format);
+			}
 			request.getServletContext().getRequestDispatcher("/uploadFile.jsp").forward(request, response);
 		}
 		

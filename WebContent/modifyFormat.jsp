@@ -54,56 +54,36 @@
               <li><a href="#"><h4>Cuenta</h4></a></li>
             </ul>
         </div>
-        
-         <div class="col-sm-9 col-md-10 main" id="content">
-         <div id="mulitplefileuploader">Subir Formato</div>
-
-		      <div id="status"></div>
-		      
-
-<script>
-
-$(document).ready(function()
-{
-
-
-    var settings = {
-	url: "ActionFormat",
-	method: "POST",
-	allowedTypes:"doc,pdf,xls",
-	fileName: "myfile",
-	dragDropStr: "<span><b>Arrastra el formato</b></span>",
-	doneStr:"Confirmar",
-	cancelStr:"Cancelar",
-	multiple: false,
-	onSuccess:function(files,data,xhr)
-	{
-		$("#status").html("<font color='green'>formato subido exitosamente, pendiente de aprobaci&oacute;n</font>");
-		
-	},
-	onError: function(files,status,errMsg)
-	{		
-		$("#status").html("<font color='red'>Fall&oacute; en la subida del formato</font>");
-	}
-}
-$("#mulitplefileuploader").uploadFile(settings);
-
-});
-</script>
-         
-
-
-</div>
-
+        <div class="col-sm-4 col-md-10 main" id="content">
+      <div class="container">
+       <form class="form-horizontal" role="form" action="FortmatsServlet" method="post">
+       <div class="form-group">
+       <div class="col-md-4">   
+   	   <h2>Modificar Formato2</h2>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-md-2 control-label">Nombre Formato</label>
+    <div class="col-md-2">
+      <input type="text" class="form-control" id="nombreFormato" name="nombreFormato"
+             placeholder="Nombre Formato">
+    </div>
+  <div class="form-group">
+    <label class="col-md-2 control-label">Versi&oacute;n</label>
+    <div class="col-lg-2">
+      <input type="text" class="form-control" id="version" name="version"
+             placeholder="version del formato">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </div>
+</form>
+    </div>
 </div>
 </div>
- 
+</div>
 </body>
-</html>
-
-      
-
-       
- 
-</body>
-</html>
+</html>       

@@ -62,6 +62,7 @@ public class ActionFormat extends HttpServlet {
 		HttpSession session = request.getSession(false);
 		String idProcess = (String) session.getAttribute("process");
 		String isNewFormat = (String) session.getAttribute("newFormat");
+		Format format = (Format) session.getAttribute("format");
 		String action = (String) session.getAttribute("action");
 		String nameFile = null;
 		String extension = null;
@@ -79,18 +80,16 @@ public class ActionFormat extends HttpServlet {
 
 					for (FileItem item : multiparts) {
 						if (!item.isFormField()) {
-
-							nameFile = new File(item.getName()).getName();
+							File file = new File (item.getName());
+							extension = getExtension(file.getName());
+							format.setExtension(extension);
+							nameFile = format.getNameFormat()+"_"+format.getVersion()+"."+format.getExtension();
 							if ("Y".equals(session.getAttribute("leadProcess"))) {
 								item.write(new File(DIRECTORY_FILE + File.separator + idProcess + "_pendiente"
 										+ File.separator + nameFile));
-								extension = FilenameUtils.getExtension(DIRECTORY_FILE + File.separator + idProcess
-										+ "_pendiente" + File.separator + nameFile);
 							} else {
 								item.write(new File(DIRECTORY_FILE + File.separator + idProcess + File.separator
 										+ nameFile));
-								extension = FilenameUtils.getExtension(DIRECTORY_FILE + File.separator + idProcess
-										+ File.separator + nameFile);
 							}
 
 						}
@@ -99,41 +98,18 @@ public class ActionFormat extends HttpServlet {
 					System.out.println("File upload failed");
 				}
 			}
-			Format format = (Format) session.getAttribute("format");
 			session.removeAttribute("format");
 			session.removeAttribute("newFormat");
 			String userLastModi = (String) session.getAttribute("user");
-			format.setExtension(extension);
 			if (conexionDB.connect() != null) {
 				if ("Y".equals(session.getAttribute("leadProcess"))) {
-					if (isNewFormat == null) {
-						
-						String[] nameSplit = nameFile.split("_");
-						String version="";
-						String [] versionSplit=nameSplit[1].split("\\.");
-						for (int i=0; i<versionSplit.length-1; i++) {
-							version+=versionSplit[i];
-							if(i!=versionSplit.length-2) {
-								version+=".";
-							}
-							
-						}
-						format.setVersion(version);
-						
-					}
 					conexionDB.createPendingFormat(format, userLastModi, format.getProcessId(), "N");
-
 				} else {
-					if (isNewFormat == null) {
-						String[] nameSplit = nameFile.split("_");
-						format.setVersion(nameSplit[1]);
-					}
 					conexionDB.createPendingFormat(format, userLastModi, format.getProcessId(), "Y");
 				}
 
 			}
 		} else {
-			Format format = (Format) session.getAttribute("format");
 			String fileName =null;
 			if(!"downloadPendiente".equals(action)) {
 				fileName = DIRECTORY_FILE + File.separator + idProcess + File.separator + format.getNameFormat()+"_"+
@@ -158,6 +134,22 @@ public class ActionFormat extends HttpServlet {
 			out.flush();
 		}
 
+	}
+	
+	
+	
+	
+	public String getExtension(String fileName) {
+		String extension = "";
+
+		int i = fileName.lastIndexOf('.');
+		int p = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+
+		if (i > p) {
+		    extension = fileName.substring(i+1);
+		}
+		return extension;
+		
 	}
 
 }

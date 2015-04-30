@@ -10,8 +10,8 @@ public class Notification {
 	
 	public void sendEmail(String to, String text) {		 
 		
-		final String username = "";
-		final String password = "";
+		final String username = "gmontoya190@gmail.com";
+		final String password = "nacien1991/";
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
